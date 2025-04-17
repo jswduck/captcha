@@ -1,0 +1,23 @@
+model:
+  name: "captcha_recognition_model"
+  pretrained_path: "microsoft/trocr-base-printed" #trocr-base-printed 
+  finetune_base: "microsoft/trocr-base-stage1"
+  finetuned_path: "../model"
+  preprocessing: false
+  beam_search:
+    max_length: 64
+    early_stopping: true
+    no_repeat_ngram_size: 3
+    length_penalty: 2.0
+    num_beams: 4
+
+training:
+  batch_size: 20
+  learning_rate: 0.001
+  num_epochs: 50
+
+data:
+  raw_dir: "../data/input"
+  output_dir: "../data/output"
+  aug_dir: "../data/augmented"
+  finetune_eval_dir: "../data/finetune_eval"
