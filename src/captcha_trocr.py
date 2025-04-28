@@ -11,7 +11,6 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 from transformers import VisionEncoderDecoderModel, TrOCRProcessor
-import pytesseract
 
 import yaml
 import os
@@ -24,9 +23,9 @@ import numpy as np
 import cv2
 import util
 
-class Captcha(object):
+class CaptchaTrOCR(object):
     """
-    A class for performing OCR on captcha images using both tessertact & pre-trained TrOCR model.
+    A class for performing OCR on captcha images using pre-trained TrOCR model.
 
     This class handles loading the model, preprocessing images, and generating text
     predictions for captcha images.
@@ -71,11 +70,10 @@ class Captcha(object):
             self.model.config.length_penalty = beam_config.get('length_penalty', 2.0)
             self.model.config.num_beams = beam_config.get('num_beams', 4)
     
-    def __call__(self, mode, im_path = "", save_path = "") -> pd.DataFrame:
+    def __call__(self, im_path = "", save_path = "") -> pd.DataFrame:
 
         """
         Perform inference on a single image or batch process all images in a directory.
-        Load the data first, and then depending on the mode, we call different models to do inference.
         
         Args:
             im_path: Path to either a .jpg image file or a directory containing .jpg images
@@ -86,10 +84,10 @@ class Captcha(object):
         """
 
 
-        valid_modes = ["tesseract", "TrOCR"]
-        if mode not in valid_modes:
-            print(f"Error: mode must be one of {valid_modes}")
-            return pd.DataFrame()
+        # valid_modes = ["tesseract", "TrOCR"]
+        # if mode not in valid_modes:
+        #     print(f"Error: mode must be one of {valid_modes}")
+        #     return pd.DataFrame()
 
         ## load the captcha images from the folders / file
 
@@ -154,13 +152,8 @@ class Captcha(object):
         ## call inference functions 
 
     
-        if mode == "tesseract":
-            print(f"Using Tesseract OCR for inference")
-            preds = self.inference_with_tesseract(batch_data)
-
-        elif mode == "TrOCR":
-            print(f"Using TrOCR for inference")
-            preds = self.inference_with_TrOCR(batch_data)
+        print(f"Using TrOCR for inference")
+        preds = self.inference_with_TrOCR(batch_data)
 
         batch_data['prediction'] = preds
 
@@ -172,27 +165,6 @@ class Captcha(object):
 
         return batch_data
         
-
-    def inference_with_tesseract(self, batch_data):
-        """
-        Perform inference on a single image or batch process all images in a directory, with tesseract
-        
-        Args:
-            batch_data: data loaded from the folders / individual file. Stored in a DataFrame
-        
-        Returns:
-            DataFrame: Identified text for the images
-        """
-
-        # Set Tesseract config
-        os.environ['TESSDATA_PREFIX'] = '/opt/homebrew/share/tessdata'
-
-        pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
-
-        tesseract_results = [pytesseract.image_to_string(Image.open(path), config='--psm 7 --oem 1 -l eng -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789').strip()[:5] for path in batch_data['input_file']] # --oem 1 --tessdata-dir /opt/homebrew/share/tessdata
-
-
-        return tesseract_results
 
 
     def inference_with_TrOCR(self, batch_data):
@@ -226,6 +198,7 @@ class Captcha(object):
         
         
         return generated_texts
+    
     
 
     def add_gt_labels(self, preds:pd.DataFrame, label_dir="") -> pd.DataFrame:
