@@ -30,7 +30,7 @@ def main():
     
     # Add ground truth labels if directory provided
     if args.labels:
-        results = captcha_model.add_gt_labelbels(predictions, label_dir=args.labels)
+        results = captcha_model.add_gt_labels(predictions, label_dir=args.labels)
         # Print WER if labels were provided
         accuracy = results['correct'].mean() * 100
         print(f"\nWord level accuracy: {accuracy:.2f}%")

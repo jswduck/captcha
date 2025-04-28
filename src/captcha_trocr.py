@@ -96,19 +96,20 @@ class CaptchaTrOCR(object):
         input_files = []
         output_files = []
         im_path = self.input_dir if im_path == "" else im_path
+        im_path = os.path.join(self.input_dir, im_path) if os.path.basename(im_path) == im_path else im_path
         
         if os.path.isfile(im_path):
             if im_path.lower().endswith('.jpg'):
-                input_path = os.path.join(self.input_dir, im_path)
+                # input_path = os.path.join(self.input_dir, im_path)
                 if save_path == "":
                     save_path = os.path.basename(im_path).replace('.jpg', '.txt')
                 output_path = os.path.join(self.output_dir, save_path)
                 
-                match = re.search(r'input(\d+)\.jpg', input_path)
+                match = re.search(r'input(\d+)\.jpg', im_path)
                 if match:
                     key = match.group(1)
                     keys.append(key)
-                    input_files.append(input_path)
+                    input_files.append(im_path)
                     output_files.append(output_path)
                 else:
                     print(f"Filename {im_path} does not match expected pattern")
