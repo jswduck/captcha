@@ -71,7 +71,7 @@ class Captcha(object):
             self.model.config.length_penalty = beam_config.get('length_penalty', 2.0)
             self.model.config.num_beams = beam_config.get('num_beams', 4)
     
-    def __call__(self, mode, im_path = "", save_path = ""):
+    def __call__(self, im_path = "", save_path = ""):
 
         """
         Perform inference on a single image or batch process all images in a directory.
@@ -82,13 +82,14 @@ class Captcha(object):
             save_path: Path to save output. If im_path is a directory, save_path should also be a directory
         
         Returns:
-            str or dict: Generated text for single image, or dictionary of results for multiple images
+            dict: Generated text for single image or multiple images
         """
 
-        valid_modes = ["tesseract", "TrOCR"]
-        if mode not in valid_modes:
-            print(f"Error: mode must be one of {valid_modes}")
-            return pd.DataFrame()
+
+        # valid_modes = ["tesseract", "TrOCR"]
+        # if mode not in valid_modes:
+        #     print(f"Error: mode must be one of {valid_modes}")
+        #     return pd.DataFrame()
 
         ## load the captcha images from the folders / file
 
@@ -150,15 +151,11 @@ class Captcha(object):
         # Sort by key
         batch_data = batch_data.sort_values('key')
 
-        ## call different inference functions based on the mode
+        ## call inference functions 
 
-        if mode == "tesseract":
-            print(f"Using Tesseract OCR for inference")
-            preds = self.inference_with_tesseract(batch_data)
-
-        elif mode == "TrOCR":
-            print(f"Using TrOCR for inference")
-            preds = self.inference_with_TrOCR(batch_data)
+    
+        print(f"Using TrOCR for inference")
+        preds = self.inference_with_TrOCR(batch_data)
 
         batch_data['prediction'] = preds
 
