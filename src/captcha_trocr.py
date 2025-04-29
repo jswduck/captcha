@@ -21,7 +21,7 @@ from PIL import Image
 
 import numpy as np
 import cv2
-import util
+#import util
 
 class CaptchaTrOCR(object):
     """
@@ -184,7 +184,7 @@ class CaptchaTrOCR(object):
         
         # Process all images in batch
         if self.preprocessing:
-            batch_images = [util.preprocess_captcha(path) for path in batch_data['input_file']]
+            batch_images = [self.preprocess_captcha(path) for path in batch_data['input_file']]
             print(f"Preprocessing turned on")
         else:
             batch_images = [Image.open(path).convert("RGB") for path in batch_data['input_file']]
@@ -248,3 +248,67 @@ class CaptchaTrOCR(object):
         )
         
         return merged_df
+    
+
+    def preprocess_captcha(self, image_path):
+        """
+        Preprocess a captcha image by converting to grayscale, thresholding, and cropping to text area.
+        
+        Args:
+            image_path (str): Path to the input captcha image file
+            
+        Returns:
+            PIL.Image: Processed image containing the cropped captcha text
+        """
+        # Read image
+        img = cv2.imread(image_path)
+        
+        # Convert to grayscale
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # Binary threshold to separate text from background
+        _, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV) # + cv2.THRESH_OTSU # cv2.THRESH_BINARY_INV + + cv2.THRESH_OTSU
+        
+        # Find contours to detect text area
+        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        if contours:
+            # Find bounding box that contains all text
+            x_min = float('inf')
+            x_max = 0
+            y_min = float('inf')
+            y_max = 0
+            
+            for cnt in contours:
+                x, y, w, h = cv2.boundingRect(cnt)
+                x_min = min(x_min, x)
+                y_min = min(y_min, y)
+                x_max = max(x_max, x + w)
+                y_max = max(y_max, y + h)
+            
+            # Add padding
+            padding = 2
+            x_min = max(0, x_min - padding)
+            y_min = max(0, y_min - padding)
+            x_max = min(img.shape[1], x_max + padding)
+            y_max = min(img.shape[0], y_max + padding)
+            
+            # Crop image to text area
+            cropped = img[y_min:y_max, x_min:x_max]
+            
+            # Convert cropped image to grayscale
+            cropped_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+            
+            # Apply final threshold to make background white and text black
+            _, binary_clean = cv2.threshold(cropped_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+
+
+            
+            # Convert to RGB (black text on white background)
+            clean_rgb = cv2.cvtColor(binary_clean, cv2.COLOR_GRAY2RGB)
+            
+            # Convert to PIL Image
+            pil_image = Image.fromarray(clean_rgb)
+        
+        return pil_image

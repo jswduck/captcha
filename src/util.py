@@ -5,7 +5,7 @@ import cv2
 from PIL import Image
 import pandas as pd
 
-import albumentations as A
+#import albumentations as A
 import numpy as np
 import os
 from tqdm import tqdm
