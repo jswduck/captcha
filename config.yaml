@@ -3,7 +3,7 @@ model:
   pretrained_path: "microsoft/trocr-base-printed" #trocr-base-printed 
   finetune_base: "microsoft/trocr-base-stage1"
   finetuned_path: "../model"
-  preprocessing: false
+  preprocessing: true
   beam_search:
     max_length: 64
     early_stopping: true
